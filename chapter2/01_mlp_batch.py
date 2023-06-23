@@ -77,14 +77,20 @@ if __name__ == "__main__":
     optimizer = optim.SGD(model.parameters(), lr=0.01)
 
     losses = []
+    acc = 0
 
     for ep in range(100):
         avg_acc, avg_loss = train_1epoch(
             model, train_loader, lossfun, optimizer, device
         )
         losses.append(avg_loss)
+        if avg_acc > acc:
+            acc = avg_acc
+
 
     plt.plot(losses)
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.savefig("fig01.png")
+
+print(acc)

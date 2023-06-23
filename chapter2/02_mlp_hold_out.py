@@ -148,6 +148,7 @@ if __name__ == "__main__":
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.legend()
+    plt.savefig("02_mlp_hold_out.png")
 
     test_preds = predict(model, test_loader, device)
 

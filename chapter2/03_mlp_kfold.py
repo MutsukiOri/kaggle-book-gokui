@@ -156,7 +156,7 @@ if __name__ == "__main__":
     print("valid acc (各foldの平均)", np.mean(valid_accs))
     print(
         "valid acc (再計算)",
-        sum(y_train == np.argmax(oof_train, axis=1)) / len(y_train),
+        sum(y_train == np.argmax([p], axis=1)) / len(y_train),
     )
 
     test_preds = np.mean(test_preds, axis=0)
