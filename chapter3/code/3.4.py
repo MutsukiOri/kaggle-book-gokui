@@ -196,6 +196,15 @@ def write_prediction(image_ids, predictions, out_path):
         for i, p in zip(image_ids, predictions):
             f.write("{},{}\n".format(i, p))
 
+def write_prediction_with_clip(
+    image_ids, prediction, clip_threshold, out_path
+):
+    with open(out_path, "w") as f:
+        f.write("id,label\n")
+        for i, p in zip(image_ids, prediction):
+            p = np.clip(p, clip_threshold, 1.0 - clip_threshold)
+            f.write("{},{}\n".format(i, p))
+
 
 def predict_subsec5(
     data_dir, out_dir, model, batch_size, dryrun=False, device="cuda:0"
