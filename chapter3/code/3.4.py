@@ -10,6 +10,7 @@ from torchvision import transforms
 import os
 from tqdm import tqdm
 
+
 def setup_center_crop_transform():
     return transforms.Compose(
         [
@@ -20,11 +21,13 @@ def setup_center_crop_transform():
         ]
     )
 
+
 def get_labels(dataset):
     if isinstance(dataset, torch.utils.data.Subset):
         return get_labels(dataset.dataset)[dataset.indices]
     else:
         return np.array([img[1] for img in dataset.imgs])
+
 
 def setup_train_val_split(labels, dryrun=False, seed=0):
     x = np.arange(len(labels))
@@ -40,6 +43,7 @@ def setup_train_val_split(labels, dryrun=False, seed=0):
 
     return train_indices, val_indices
 
+
 def setup_train_val_datasets(data_dir, dryrun=False):
     dataset = torchvision.datasets.ImageFolder(
         os.path.join(data_dir, "train"),
@@ -52,6 +56,7 @@ def setup_train_val_datasets(data_dir, dryrun=False):
     val_dataset = torch.utils.data.Subset(dataset, val_indices)
 
     return train_dataset, val_dataset
+
 
 def setup_train_val_loaders(data_dir, batch_size, dryrun=False):
     train_dataset, val_dataset = setup_train_val_datasets(
@@ -74,6 +79,8 @@ def setup_train_val_loaders(data_dir, batch_size, dryrun=False):
 ############################################
 
 # コード引用あり＠5節
+
+
 def train_1epoch(model, train_loader, lossfun, optimizer, device):
     model.train()
     total_loss, total_acc = 0.0, 0.0
@@ -149,24 +156,84 @@ def train_subsec5(data_dir, batch_size, dryrun=False, device="cuda:0"):
     return model
 
 
+def setup_test_loader(data_dir, batch_size, dryrun):
+    dataset = torchvision.datasets.ImageFolder(
+        os.path.join(data_dir, "test"), transform=setup_center_crop_transform()
+    )
+    image_ids = [
+        os.path.splitext(os.path.basename(path))[0] for path, _ in dataset.imgs
+    ]
+
+    if dryrun:
+        dataset = torch.utils.data.Subset(dataset, range(0, 100))
+        image_ids = image_ids[:100]
+
+    loader = torch.utils.data.DataLoader(
+        dataset, batch_size=batch_size, num_workers=8
+    )
+    return loader, image_ids
+
+
+def predict(model, loader, device):
+    pred_fun = torch.nn.Softmax(dim=1)
+    preds = []
+    for x, _ in tqdm(loader):
+        with torch.set_grad_enabled(False):
+            x = x.to(device)
+            y = pred_fun(model(x))
+        y = y.cpu().numpy()
+        # print(y)
+        y = y[:, 1]
+        # print(y)
+        preds.append(y)
+    preds = np.concatenate(preds)
+    return preds
+
+
+def write_prediction(image_ids, predictions, out_path):
+    with open(out_path, "w") as f:
+        f.write('id.label\n')
+        for i, p in zip(image_ids, predictions):
+            f.write("{},{}\n".format(i, p))
+
+
+def predict_subsec5(
+    data_dir, out_dir, model, batch_size, dryrun=False, device="cuda:0"
+):
+    test_loader, image_ids = setup_test_loader(
+        data_dir, batch_size, dryrun=dryrun
+    )
+    preds = predict(model, test_loader, device)
+    write_prediction(image_ids, preds, out_dir / "out.csv")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='../dogs_vs_cats')
+    parser.add_argument('--out_dir', type=str, default='../out/chapter3')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--dryrun", action="store_true")
     args = parser.parse_args()
 
     data_dir = pathlib.Path(args.data_dir)
+    out_dir = pathlib.Path(args.out_dir)
     device = args.device
     dryrun = args.dryrun
 
     batch_size = 32
-    train, val = setup_train_val_loaders(data_dir, batch_size, dryrun)
 
-    print(len(train.dataset))
-    print(len(val.dataset))
+    train, val = setup_train_val_loaders(data_dir, batch_size, dryrun)
+    print('train: ', len(train.dataset))
+    print('val: ', len(val.dataset))
+
     model = train_subsec5(data_dir, batch_size, dryrun, device)
+
+    # test_loader, image_ids = setup_test_loader(data_dir, batch_size, dryrun)
+    # preds = predict(model, test_loader, device)
+
+    predict_subsec5(data_dir, out_dir, model, batch_size, dryrun, device)
+    print('done')
 
 
 if __name__ == "__main__":
