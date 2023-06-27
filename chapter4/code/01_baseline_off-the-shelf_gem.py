@@ -26,5 +26,5 @@ class ResNetOfftheShelfGeM(nn.Module):
 if __name__ == "__main__":
     model = ResNetOfftheShelfGeM(pretrained=True)
     x = torch.rand(4, 3, 244, 244)
-    out = model(x)
+    out = model(x) # forward 関数が実行される いわゆる順伝搬
     print(out.size())  # => torch.Size([4, 512])

@@ -1,4 +1,5 @@
 import cv2
+from tqdm import tqdm
 import numpy as np
 import timm
 import torch
@@ -11,6 +12,10 @@ from torchvision import transforms
 
 
 class ResNetOfftheShelfGeM(nn.Module):
+    """
+        cirtorchを利用した一般化プーリングによる帯域特徴量を抽出するモジュール
+    """
+
     def __init__(self, backbone="resnet34", pretrained=False):
         super().__init__()
         self.backbone = timm.create_model(
@@ -28,6 +33,9 @@ class ResNetOfftheShelfGeM(nn.Module):
 
 
 def extract_vectors(model, image_files, input_size, out_dim, transform, bbxs=None, device="cuda"):
+    '''
+    モデルによって得られる特長量からベクトル表現を抽出する
+    '''
     dataloader = torch.utils.data.DataLoader(
         ImagesFromList(root="", images=image_files, imsize=input_size,
                        transform=transform, bbxs=bbxs),
@@ -43,6 +51,9 @@ def extract_vectors(model, image_files, input_size, out_dim, transform, bbxs=Non
 
 
 def get_query_index_images(cfg):
+    '''
+    datasetのconfigから画像のパスから画像データを取得する
+    '''
     index_images = [cfg["im_fname"](cfg, i) for i in range(cfg["n"])]
     query_images = [cfg["qim_fname"](cfg, i) for i in range(cfg["nq"])]
 
@@ -58,8 +69,8 @@ def main(input_size=224, out_dim=512):
     device = "cuda"
 
     datasets = {
-        "roxford5k": configdataset("roxford5k", "./"),
-        "rparis6k": configdataset("rparis6k", "./")
+        "roxford5k": configdataset("roxford5k", "../data/"),
+        "rparis6k": configdataset("rparis6k", "../data/")
     }
 
     model = ResNetOfftheShelfGeM(pretrained=True)
@@ -73,12 +84,21 @@ def main(input_size=224, out_dim=512):
     ])
 
     for dataset_name, dataset_config in datasets.items():
-        index_images, query_images, bbxs = get_query_index_images(dataset_config)
-        index_vectors = extract_vectors(model, index_images, input_size, out_dim, transform, device=device)
-        query_vectors = extract_vectors(model, query_images, input_size, out_dim, transform, bbxs=bbxs, device=device)
+        # インデックス画像，クエリ画像をデータセットから取得
+        index_images, query_images, bbxs = get_query_index_images(
+            dataset_config)
+        # インデックス画像をベクトル表現に変換
+        index_vectors = extract_vectors(
+            model, index_images, input_size, out_dim, transform, device=device)
+        # クエリ画像をベクトル表現に変換
+        query_vectors = extract_vectors(
+            model, query_images, input_size, out_dim, transform, bbxs=bbxs, device=device)
+
+        # numpyに変換
         index_vectors = index_vectors.numpy()
         query_vectors = query_vectors.numpy()
 
+        # コサイン類似度を計算
         scores = np.dot(index_vectors.T, query_vectors)
         ranks = np.argsort(-scores, axis=0)
         compute_map_and_print(dataset_name, ranks, dataset_config["gnd"])
