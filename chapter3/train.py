@@ -250,7 +250,7 @@ def train_1epoch2(
         loss = lossfun(model(x), y)
         loss.backward()
         optimizer.step()
-        lr_scheduler.step()
+        lr_scheduler.step()  # lr_schdulerから学習率を進める
 
         total_loss += loss.item() * x.size(0)
         total_acc += torch.sum(pred == y)
@@ -498,6 +498,7 @@ def run_6(data_dir, out_dir, dryrun, device):
         model.parameters(), lr=0.01, momentum=0.9, weight_decay=0.0001
     )
     n_iterations = len(train_loader) * n_epochs
+    # 学習率をschjedulerで変化させる CosineAnnealingLRを利用
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, n_iterations
     )
