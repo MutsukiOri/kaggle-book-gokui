@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SequentialSampler
 from PIL import Image
 
-from model import AngularModel
+from chapter4.code.model import AngularModel
 
 
 def get_model():

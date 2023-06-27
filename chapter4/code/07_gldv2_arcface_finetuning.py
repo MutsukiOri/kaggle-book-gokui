@@ -12,8 +12,8 @@ from cirtorch.utils.evaluate import compute_map_and_print
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision import transforms
 
-from gldv2dataset import get_dataloaders
-from model import AngularModel
+from chapter4.code.gldv2dataset import get_dataloaders
+from chapter4.code.model import AngularModel
 
 
 class AverageMeter:

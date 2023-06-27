@@ -9,8 +9,8 @@ import torch.nn as nn
 import torch.optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from gldv2dataset import get_dataloaders
-from model import AngularModel
+from chapter4.code.gldv2dataset import get_dataloaders
+from chapter4.code.model import AngularModel
 
 
 def save_checkpoint(model: Any, epoch: int, path: Path):
