@@ -8,5 +8,6 @@ docker run --gpus all -it --init \
  -v ${HOME}/.cache:/root/.cache \
  -v `pwd`/data:/workspace/data \
  -v `pwd`/code:/workspace/code \
+ --name kaggle-gokui-chapter4 \
  kaggle-gokui-chapter4 \
  bash
