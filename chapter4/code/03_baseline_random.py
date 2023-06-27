@@ -7,8 +7,8 @@ np.random.seed(1)
 
 def main():
     datasets = {
-        "roxford5k": configdataset("roxford5k", "./"),
-        "rparis6k": configdataset("rparis6k", "./")
+        "roxford5k": configdataset("roxford5k", "../data/"),
+        "rparis6k": configdataset("rparis6k", "../data/")
     }
 
     for dataset_name, dataset_config in datasets.items():
