@@ -83,7 +83,7 @@ def main(input_size=224, out_dim=512):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
 
-    for dataset_name, dataset_config in datasets.items():
+    for dataset_name, dataset_config in tqdm(datasets.items()):
         # インデックス画像，クエリ画像をデータセットから取得
         index_images, query_images, bbxs = get_query_index_images(
             dataset_config)
